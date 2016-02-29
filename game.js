@@ -5,10 +5,16 @@ var cY = 0;
 var cWidth = 400;
 var cHeight = 400;
 var radius = 10;
+var radiusApp = 5;
 var locX = cWidth / 2;
 var locY = cHeight / 2;
-var moveX = 5;
-var moveY = 5;
+var moveX = 2;
+var moveY = 2;
+var currDir;
+var start = false;
+var locXApp;
+var locYApp;
+var appCounter = 0;
 
 /* Initialize canvas and redraw every set interval */
 function init() {
@@ -16,12 +22,12 @@ function init() {
     c.width = cWidth;
     c.height = cHeight;
     ctx = c.getContext("2d");
-    return setInterval(drawCanvas, 10);
+    genApple();
+    drawCanvas();
 }
 
 /* Draw default canvas objects */
 function drawCanvas() {
-    clearCanvas();
     ctx.fillStyle = 'lime';
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'black';
@@ -30,6 +36,26 @@ function drawCanvas() {
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'black';
     drawCircle(locX, locY, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = 'red';
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'black';
+    drawCircle(locXApp, locYApp, radiusApp, 0, 2 * Math.PI);
+}
+
+/* Move snake and draw the new canvas */
+function gameOn() {
+    diffLevel();
+    moveSnake();
+    clearCanvas();
+    drawCanvas();
+}
+
+function diffLevel () {
+    /* Check if apple was eaten */
+    if(Math.sqrt(Math.pow((locX-locXApp), 2) + Math.pow((locY-locYApp), 2)) < (radius + radiusApp)){
+        appCounter += 1;
+        genApple();
+    }
 }
 
 /* Clear current canvas contents */
@@ -55,7 +81,19 @@ function drawRect(aX, aY, aWidth, aHeight) {
 
 /* Key press listener */
 function keyPress(evt) {
-    switch (evt.keyCode) {
+
+    /* Check if game has begun */
+    if (!start) {
+        start = true;
+        currDir = evt.keyCode;
+        setInterval(gameOn, 10);
+    } else {
+        currDir = evt.keyCode;
+    }
+}
+
+function moveSnake() {
+    switch (currDir) {
         case 38:
             /* Up arrow was pressed */
             if (locY - moveY > 0) {
@@ -83,8 +121,9 @@ function keyPress(evt) {
     }
 }
 
-function moveSnake (aLocX, aLocY) {
-	return (locXNew, locYNew);
+function genApple () {
+    locXApp = Math.random() * (cWidth - radiusApp * 4);
+    locYApp = Math.random() * (cHeight - radiusApp * 4);
 }
 
 init();
