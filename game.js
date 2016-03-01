@@ -6,15 +6,20 @@ var cWidth = 400;
 var cHeight = 400;
 var radius = 10;
 var radiusApp = 5;
-var locX = cWidth / 2;
-var locY = cHeight / 2;
-var moveX = 2;
-var moveY = 2;
-var currDir;
+var move = 2;
+var currDir = 38;
 var start = false;
 var locXApp;
 var locYApp;
-var appCounter = 0;
+var appCounter = 1;
+var changeSize = 3;
+var arrSnake = [
+    [cWidth / 2, cHeight / 2, radius],
+    [cWidth / 2, cHeight / 2, radius]
+];
+var arrSnakeTmp = [];
+var iPos;
+var grd;
 
 /* Initialize canvas and redraw every set interval */
 function init() {
@@ -28,14 +33,28 @@ function init() {
 
 /* Draw default canvas objects */
 function drawCanvas() {
-    ctx.fillStyle = 'lime';
+
+    // Draw background
+    grd = ctx.createLinearGradient(0, 200, 300, 0);
+    grd.addColorStop(0, "#00cc00");
+    grd.addColorStop(0.5, "#00b300");
+    grd.addColorStop(1, "#009900");
+    ctx.fillStyle = grd;
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'black';
     drawRect(cX, cY, cWidth, cHeight);
+
+    // Draw the snake
     ctx.fillStyle = 'green';
     ctx.lineWidth = 3;
-    ctx.strokeStyle = 'black';
-    drawCircle(locX, locY, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#003300';
+
+    // Loop through all snake parts
+    for (var i = 0; i < arrSnake.length; i++) {
+        drawCircle(arrSnake[i][0], arrSnake[i][1], arrSnake[i][2], 0, 2 * Math.PI);
+    }
+
+    // Draw the apple
     ctx.fillStyle = 'red';
     ctx.lineWidth = 2;
     ctx.strokeStyle = 'black';
@@ -45,17 +64,37 @@ function drawCanvas() {
 /* Move snake and draw the new canvas */
 function gameOn() {
     diffLevel();
-    moveSnake();
     clearCanvas();
     drawCanvas();
 }
 
-function diffLevel () {
+function diffLevel() {
+
     /* Check if apple was eaten */
-    if(Math.sqrt(Math.pow((locX-locXApp), 2) + Math.pow((locY-locYApp), 2)) < (radius + radiusApp)){
+    if (Math.sqrt(Math.pow((arrSnake[arrSnake.length - 1][0] - locXApp), 2) +
+            Math.pow((arrSnake[arrSnake.length - 1][1] - locYApp), 2)) <
+        (radius + radiusApp)) {
         appCounter += 1;
         genApple();
+        iPos = 0;
+    } else {
+        iPos = 1;
     }
+
+    // Grow and move snake accordingly
+    for (var i = iPos; i < arrSnake.length; i++) {
+        if (i == (arrSnake.length - 1)) {
+            arrSnakeTmp.push(arrSnake[arrSnake.length - 1].slice());
+            moveSnake();
+            arrSnakeTmp.push(arrSnake[arrSnake.length - 1].slice());
+        } else {
+            arrSnakeTmp.push(arrSnake[i].slice());
+            arrSnakeTmp[arrSnakeTmp.length - 1][2] = radius / (arrSnake.length / i);
+        }
+    };
+
+    arrSnake = arrSnakeTmp.slice();
+    arrSnakeTmp = [];
 }
 
 /* Clear current canvas contents */
@@ -93,38 +132,42 @@ function keyPress(evt) {
 }
 
 function moveSnake() {
+
+    // Check which arrow has been pressed
     switch (currDir) {
         case 38:
             /* Up arrow was pressed */
-            if (locY - moveY > 0) {
-                locY -= moveY;
+            if (arrSnake[arrSnake.length - 1][1] - move > 0) {
+                arrSnake[arrSnake.length - 1][1] -= move;
             }
             break;
         case 40:
             /* Down arrow was pressed */
-            if (locY + moveY < cHeight) {
-                locY += moveY;
+            if (arrSnake[arrSnake.length - 1][1] + move < cHeight) {
+                arrSnake[arrSnake.length - 1][1] += move;
             }
             break;
         case 37:
             /* Left arrow was pressed */
-            if (locX - moveX > 0) {
-                locX -= moveX;
+            if (arrSnake[arrSnake.length - 1][0] - move > 0) {
+                arrSnake[arrSnake.length - 1][0] -= move;
             }
             break;
         case 39:
             /* Right arrow was pressed */
-            if (locX + moveX < cWidth) {
-                locX += moveX;
+            if (arrSnake[arrSnake.length - 1][0] + move < cWidth) {
+                arrSnake[arrSnake.length - 1][0] += move;
             }
             break;
     }
 }
 
-function genApple () {
-    locXApp = Math.random() * (cWidth - radiusApp * 4);
-    locYApp = Math.random() * (cHeight - radiusApp * 4);
+// Generate random apple location
+function genApple() {
+    locXApp = Math.random() * (0.9 * cWidth);
+    locYApp = Math.random() * (0.9 * cHeight);
 }
 
+// Begin game and listen for keyboard inputs
 init();
 window.addEventListener('keydown', keyPress, true);
